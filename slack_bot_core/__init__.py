@@ -17,11 +17,15 @@ Usage:
 
 from .runner import SlackBotRunner
 from .utils import get_thread_history, build_conversation_messages, post_status_message
+from .scanner import get_channel_history, get_channels_for_bot, get_bot_conversations
 
 __all__ = [
     "SlackBotRunner",
     "get_thread_history",
     "build_conversation_messages",
     "post_status_message",
+    "get_channel_history",
+    "get_channels_for_bot",
+    "get_bot_conversations",
 ]
-__version__ = "0.1.0"
+__version__ = "0.2.0"
