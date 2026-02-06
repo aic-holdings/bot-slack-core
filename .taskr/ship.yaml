@@ -1,0 +1,35 @@
+name: Slack Bot Core Library
+tagline: Shared Slack bot utilities with dependency-injected AI
+
+release:
+  github: true
+  tag_format: "v{version}"
+  changelog: auto
+
+branching:
+  default_branch: main
+  strategy: github-flow
+  feature_prefix: feat/
+  bugfix_prefix: fix/
+  require_pr: false  # small team, early stage
+  require_review: false
+  protected_branches:
+    - main
+
+ci:
+  provider: github-actions
+  checks:
+    - name: pytest
+      required: true
+    - name: ruff
+      required: false
+  auto_deploy:
+    enabled: false  # library, not a service
+
+deploy:
+  target: none  # pip-installable, no deployment
+
+verify:
+  wait_seconds: 10
+  checks:
+    - type: gh-release-exists

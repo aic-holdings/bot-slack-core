@@ -1,0 +1,27 @@
+constraints:
+  - Never break the chat_fn contract (messages, system_prompt) -> str
+  - Never add hard AI dependencies — AI is injected, not owned by core
+  - Backward-compatible changes only — all bots depend on this library
+  - Semantic versioning strictly enforced (breaking changes = major bump)
+  - Test all changes — this is shared infrastructure
+
+boundaries:
+  in_scope:
+    - Slack event handling and plumbing
+    - Thread history and conversation building
+    - Status/diagnostic messages
+    - Graceful shutdown
+    - Bot runner configuration
+    - Shared patterns and conventions (docs/)
+  out_of_scope:
+    - AI client implementations
+    - Business logic for specific bots
+    - Database operations
+    - Bot-specific commands
+
+approvals:
+  required_for:
+    - Breaking API changes (major version bump)
+    - New dependencies in pyproject.toml
+    - Changes to the chat_fn contract
+  approvers: [dshanklin]
