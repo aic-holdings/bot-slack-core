@@ -1,11 +1,11 @@
 """Tests for slack_bot_core.scanner"""
 
-import pytest
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, patch
+
 from slack_bot_core.scanner import (
+    get_bot_conversations,
     get_channel_history,
     get_channels_for_bot,
-    get_bot_conversations,
 )
 
 

@@ -6,7 +6,7 @@ fetch channel history with pagination, and extract full bot conversation threads
 """
 
 import logging
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 import httpx
 
