@@ -21,7 +21,7 @@ Users interact with Preview by @mentioning it instead of the stable bot. Both ru
 ## Architecture
 
 ```
-Same GitHub repo (e.g., aic-holdings/aic-slack-bot)
+Same GitHub repo (e.g., aic-holdings/slack-bot-meridian)
 ├── main branch ──────────► Railway Service: meridian-stable
 │                            Slack App: "Meridian"
 │                            SLACK_BOT_TOKEN=xoxb-stable-...

@@ -18,4 +18,4 @@ Before making changes, read the `.taskr/` folder:
 - `docs/` — shared patterns (preview-bot-pattern.md)
 
 ## Consumers
-All AIC Slack bots depend on this: aic-slack-bot (Meridian), bot-ciso, bot-sable, bot-taskr.
+All AIC Slack bots depend on this: slack-bot-meridian, slack-bot-taskr, slack-bot-sable, slack-bot-ciso.
