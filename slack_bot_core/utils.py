@@ -2,9 +2,9 @@
 Slack utilities - pure functions for thread history, message formatting, status posting.
 """
 
-import re
 import logging
-from typing import List, Dict, Optional
+import re
+from typing import Dict, List
 
 import httpx
 

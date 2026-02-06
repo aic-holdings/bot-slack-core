@@ -2,18 +2,18 @@
 SlackBotRunner - Orchestrates Slack events with injected AI chat function.
 """
 
+import logging
 import os
 import signal
 import sys
 import time
-import logging
-from typing import Callable, List, Dict, Optional
 from dataclasses import dataclass, field
+from typing import Callable, Dict, List, Optional
 
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
-from .utils import get_thread_history, build_conversation_messages, post_status_message
+from .utils import build_conversation_messages, get_thread_history, post_status_message
 
 logger = logging.getLogger(__name__)
 

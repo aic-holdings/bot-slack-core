@@ -1,10 +1,10 @@
 """Tests for slack_bot_core.utils"""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from slack_bot_core.utils import (
-    get_thread_history,
     build_conversation_messages,
+    get_thread_history,
     post_status_message,
 )
 

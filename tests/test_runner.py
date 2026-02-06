@@ -1,8 +1,10 @@
 """Tests for slack_bot_core.runner"""
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from slack_bot_core.runner import SlackBotRunner, SlackBotConfig
+
+from slack_bot_core.runner import SlackBotConfig, SlackBotRunner
 
 
 @pytest.fixture
