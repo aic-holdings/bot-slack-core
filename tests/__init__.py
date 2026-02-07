@@ -1,1 +1,1 @@
-# Tests for slack-bot-core
+# Tests for bot-core

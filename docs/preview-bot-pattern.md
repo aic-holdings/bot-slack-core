@@ -21,7 +21,7 @@ Users interact with Preview by @mentioning it instead of the stable bot. Both ru
 ## Architecture
 
 ```
-Same GitHub repo (e.g., aic-holdings/slack-bot-meridian)
+Same GitHub repo (e.g., aic-holdings/meridian-bot)
 ├── main branch ──────────► Railway Service: meridian-stable
 │                            Slack App: "Meridian"
 │                            SLACK_BOT_TOKEN=xoxb-stable-...
@@ -63,7 +63,7 @@ Same repo, different branch and env vars:
 # - Environment variables: the Preview Slack app's tokens
 ```
 
-### 3. Configure with SlackBotConfig
+### 3. Configure with BotConfig
 
 ```python
 import os
@@ -71,7 +71,7 @@ import os
 version = os.environ.get("BOT_VERSION", "1")
 is_preview = os.environ.get("BOT_PREVIEW", "false").lower() == "true"
 
-config = SlackBotConfig(
+config = BotConfig(
     bot_name="Meridian Preview" if is_preview else "Meridian",
     version=f"{version}.0.0-preview" if is_preview else f"{version}.0.0",
     system_prompt="...",
@@ -81,7 +81,7 @@ config = SlackBotConfig(
 
 ### 4. Optional: Limit Preview to Specific Channels
 
-During early testing, you may want Preview to only respond in certain channels. This isn't built into slack-bot-core yet but can be done at the bot level:
+During early testing, you may want Preview to only respond in certain channels. This isn't built into bot-core yet but can be done at the bot level:
 
 ```python
 PREVIEW_CHANNELS = os.environ.get("PREVIEW_CHANNELS", "").split(",")
@@ -141,9 +141,9 @@ All other env vars (DB, API keys, etc.) can be shared or separate depending on w
 
 ## Future: Core Library Support
 
-When this pattern is adopted across bots, consider adding to `slack-bot-core`:
+When this pattern is adopted across bots, consider adding to `bot-core`:
 
-- `SlackBotConfig.is_preview` field
-- `SlackBotConfig.allowed_channels` for channel restrictions
+- `BotConfig.is_preview` field
+- `BotConfig.allowed_channels` for channel restrictions
 - Diagnostic info showing preview status
 - A `promote()` CLI command or skillflow for the swap process
