@@ -1,16 +1,16 @@
-"""Tests for slack_bot_core.runner"""
+"""Tests for bot_core.runner"""
 
 from unittest.mock import patch
 
 import pytest
 
-from slack_bot_core.runner import SlackBotConfig, SlackBotRunner
+from bot_core.runner import BotConfig, BotRunner
 
 
 @pytest.fixture
 def mock_config():
     """Create a test config."""
-    return SlackBotConfig(
+    return BotConfig(
         bot_name="Test Bot",
         version="1.0.0",
         system_prompt="You are a test bot.",
@@ -26,12 +26,12 @@ def mock_chat_fn():
     return chat_fn
 
 
-class TestSlackBotConfig:
-    """Tests for SlackBotConfig dataclass"""
+class TestBotConfig:
+    """Tests for BotConfig dataclass"""
 
     def test_required_fields(self):
         """Config requires bot_name, version, system_prompt."""
-        config = SlackBotConfig(
+        config = BotConfig(
             bot_name="Test",
             version="1.0.0",
             system_prompt="Test prompt",
@@ -42,7 +42,7 @@ class TestSlackBotConfig:
 
     def test_optional_status_channel(self):
         """status_channel is optional."""
-        config = SlackBotConfig(
+        config = BotConfig(
             bot_name="Test",
             version="1.0.0",
             system_prompt="Test prompt",
@@ -51,7 +51,7 @@ class TestSlackBotConfig:
 
     def test_default_diagnostic_commands(self):
         """Default diagnostic commands are set."""
-        config = SlackBotConfig(
+        config = BotConfig(
             bot_name="Test",
             version="1.0.0",
             system_prompt="Test prompt",
@@ -62,7 +62,7 @@ class TestSlackBotConfig:
 
     def test_custom_diagnostic_commands(self):
         """Can override diagnostic commands."""
-        config = SlackBotConfig(
+        config = BotConfig(
             bot_name="Test",
             version="1.0.0",
             system_prompt="Test prompt",
@@ -71,24 +71,24 @@ class TestSlackBotConfig:
         assert config.diagnostic_commands == ["status", "custom"]
 
 
-class TestSlackBotRunnerInit:
-    """Tests for SlackBotRunner initialization"""
+class TestBotRunnerInit:
+    """Tests for BotRunner initialization"""
 
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-test", "SLACK_APP_TOKEN": "xapp-test"})
-    @patch("slack_bot_core.runner.App")
+    @patch("bot_core.runner.App")
     def test_init_with_env_vars(self, mock_app_class, mock_config, mock_chat_fn):
         """Initializes with environment variables."""
-        runner = SlackBotRunner(chat_fn=mock_chat_fn, config=mock_config)
+        runner = BotRunner(chat_fn=mock_chat_fn, config=mock_config)
 
         assert runner.slack_bot_token == "xoxb-test"
         assert runner.slack_app_token == "xapp-test"
         assert runner.chat_fn == mock_chat_fn
         assert runner.config == mock_config
 
-    @patch("slack_bot_core.runner.App")
+    @patch("bot_core.runner.App")
     def test_init_with_explicit_tokens(self, mock_app_class, mock_config, mock_chat_fn):
         """Initializes with explicit tokens."""
-        runner = SlackBotRunner(
+        runner = BotRunner(
             chat_fn=mock_chat_fn,
             config=mock_config,
             slack_bot_token="xoxb-explicit",
@@ -102,16 +102,16 @@ class TestSlackBotRunnerInit:
     def test_init_missing_tokens_raises(self, mock_config, mock_chat_fn):
         """Raises ValueError when tokens are missing."""
         with pytest.raises(ValueError, match="Missing SLACK_BOT_TOKEN or SLACK_APP_TOKEN"):
-            SlackBotRunner(chat_fn=mock_chat_fn, config=mock_config)
+            BotRunner(chat_fn=mock_chat_fn, config=mock_config)
 
 
-class TestSlackBotRunnerDiagnostics:
+class TestBotRunnerDiagnostics:
     """Tests for diagnostic info generation"""
 
-    @patch("slack_bot_core.runner.App")
+    @patch("bot_core.runner.App")
     def test_diagnostic_info_contains_version(self, mock_app_class, mock_config, mock_chat_fn):
         """Diagnostic info includes bot version."""
-        runner = SlackBotRunner(
+        runner = BotRunner(
             chat_fn=mock_chat_fn,
             config=mock_config,
             slack_bot_token="xoxb-test",
@@ -126,10 +126,10 @@ class TestSlackBotRunnerDiagnostics:
         assert "Test Bot" in info
         assert "1m" in info  # 60 seconds = 1 minute
 
-    @patch("slack_bot_core.runner.App")
+    @patch("bot_core.runner.App")
     def test_diagnostic_info_uptime_formatting(self, mock_app_class, mock_config, mock_chat_fn):
         """Diagnostic info formats uptime correctly."""
-        runner = SlackBotRunner(
+        runner = BotRunner(
             chat_fn=mock_chat_fn,
             config=mock_config,
             slack_bot_token="xoxb-test",
@@ -145,10 +145,10 @@ class TestSlackBotRunnerDiagnostics:
         assert "1m" in info
 
 
-class TestSlackBotRunnerChatFnContract:
+class TestBotRunnerChatFnContract:
     """Tests for chat_fn contract validation"""
 
-    @patch("slack_bot_core.runner.App")
+    @patch("bot_core.runner.App")
     def test_chat_fn_receives_messages_list(self, mock_app_class, mock_config):
         """chat_fn receives messages as list of dicts."""
         received_messages = []
@@ -157,7 +157,7 @@ class TestSlackBotRunnerChatFnContract:
             received_messages.append(messages)
             return "response"
 
-        runner = SlackBotRunner(
+        runner = BotRunner(
             chat_fn=capture_chat_fn,
             config=mock_config,
             slack_bot_token="xoxb-test",
@@ -170,7 +170,7 @@ class TestSlackBotRunnerChatFnContract:
 
         assert received_messages[0] == test_messages
 
-    @patch("slack_bot_core.runner.App")
+    @patch("bot_core.runner.App")
     def test_chat_fn_receives_system_prompt(self, mock_app_class, mock_config):
         """chat_fn receives system prompt."""
         received_prompts = []
@@ -179,7 +179,7 @@ class TestSlackBotRunnerChatFnContract:
             received_prompts.append(system_prompt)
             return "response"
 
-        runner = SlackBotRunner(
+        runner = BotRunner(
             chat_fn=capture_chat_fn,
             config=mock_config,
             slack_bot_token="xoxb-test",

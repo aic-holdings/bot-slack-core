@@ -7,7 +7,7 @@ constraints:
 
 boundaries:
   in_scope:
-    - Slack event handling and plumbing
+    - Event handling and plumbing (Slack adapter)
     - Thread history and conversation building
     - Status/diagnostic messages
     - Graceful shutdown

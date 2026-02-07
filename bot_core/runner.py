@@ -1,5 +1,5 @@
 """
-SlackBotRunner - Orchestrates Slack events with injected AI chat function.
+BotRunner - Orchestrates messaging events with injected AI chat function.
 """
 
 import logging
@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class SlackBotConfig:
-    """Configuration for a Slack bot."""
+class BotConfig:
+    """Configuration for a bot."""
     bot_name: str
     version: str
     system_prompt: str
@@ -30,12 +30,12 @@ class SlackBotConfig:
     )
 
 
-class SlackBotRunner:
+class BotRunner:
     """
-    Orchestrates Slack bot events with dependency-injected AI.
+    Orchestrates bot events with dependency-injected AI.
 
-    The bot owns:
-    - Slack token management
+    The runner owns:
+    - Token management (currently Slack)
     - Event handling (mentions, DMs)
     - Thread history fetching
     - Status messages
@@ -48,7 +48,7 @@ class SlackBotRunner:
     def __init__(
         self,
         chat_fn: Callable[[List[Dict], Optional[str]], str],
-        config: SlackBotConfig,
+        config: BotConfig,
         slack_bot_token: Optional[str] = None,
         slack_app_token: Optional[str] = None,
     ):

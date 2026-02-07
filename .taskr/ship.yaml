@@ -1,5 +1,5 @@
-name: Slack Bot Core Library
-tagline: Shared Slack bot utilities with dependency-injected AI
+name: Bot Core Library
+tagline: Bot infrastructure with dependency-injected AI
 
 release:
   github: true

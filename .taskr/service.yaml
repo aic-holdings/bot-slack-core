@@ -1,11 +1,11 @@
-name: slack-bot-core
-title: Slack Bot Core Library
+name: bot-core
+title: Bot Core Library
 org: aic
 owner: dshanklin
 service_id: 313ac837-744e-4a14-bb53-6a7986048bdd
 
-repo: aic-holdings/slack-bot-core
-tags: [slack, bot, library, shared, core]
+repo: aic-holdings/bot-core
+tags: [bot, library, shared, core]
 
 deploy:
   target: none  # library, not a deployed service

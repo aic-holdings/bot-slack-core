@@ -28,11 +28,11 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          ruff check slack_bot_core tests
+          ruff check bot_core tests
 
       - name: Run tests
         run: |
-          pytest -v --cov=slack_bot_core --cov-report=xml
+          pytest -v --cov=bot_core --cov-report=xml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4

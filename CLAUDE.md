@@ -1,4 +1,4 @@
-# Slack Bot Core Library
+# Bot Core Library
 
 Before making changes, read the `.taskr/` folder:
 - `.taskr/service.yaml` — service identity, owner, deploy target
@@ -13,9 +13,10 @@ Before making changes, read the `.taskr/` folder:
 - This is a pip-installable library, not a deployed service
 
 ## Architecture
-- `slack_bot_core/runner.py` — SlackBotRunner + SlackBotConfig
-- `slack_bot_core/utils.py` — thread history, conversation building, status messages
+- `bot_core/runner.py` — BotRunner + BotConfig
+- `bot_core/utils.py` — thread history, conversation building, status messages
+- `bot_core/scanner.py` — channel scanning, bot conversation extraction
 - `docs/` — shared patterns (preview-bot-pattern.md)
 
 ## Consumers
-All AIC Slack bots depend on this: slack-bot-meridian, slack-bot-taskr, slack-bot-sable, slack-bot-ciso.
+All AIC bots depend on this: meridian-bot, sable-bot, ciso-bot. BotBot (in taskr) uses the scanner.

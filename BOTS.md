@@ -1,44 +1,42 @@
-# AIC Slack Bot Ecosystem
+# AIC Bot Ecosystem
 
 ## Naming Convention
 
-All Slack bot repos follow **`slack-bot-{name}`**:
+Bot repos follow **`{name}-bot`**, the shared library is **`bot-core`**:
 
 | Repo | Bot Name | What It Does |
 |------|----------|---|
-| [slack-bot-core](https://github.com/aic-holdings/slack-bot-core) | — | Shared library (not a bot). Slack plumbing, thread history, ChannelScanner. |
-| [slack-bot-meridian](https://github.com/aic-holdings/slack-bot-meridian) | Meridian | Trading idea journal. Market data, portfolio analysis, research tools. |
-| [slack-bot-taskr](https://github.com/aic-holdings/slack-bot-taskr) | Taskr Bot | Task management interface. Also serves as quality reviewer for all bots. |
-| [slack-bot-sable](https://github.com/aic-holdings/slack-bot-sable) | Sable | Portfolio data queries and risk analysis. |
-| [slack-bot-ciso](https://github.com/aic-holdings/slack-bot-ciso) | CISO | Sentinel AI CISO — security posture and compliance. |
+| [bot-core](https://github.com/aic-holdings/bot-core) | — | Shared library (not a bot). Messaging plumbing, thread history, ChannelScanner. |
+| [meridian-bot](https://github.com/aic-holdings/meridian-bot) | Meridian | Trading idea journal. Market data, portfolio analysis, research tools. |
+| [sable-bot](https://github.com/aic-holdings/sable-bot) | Sable | Portfolio data queries and risk analysis. |
+| [ciso-bot](https://github.com/aic-holdings/ciso-bot) | CISO | Sentinel AI CISO — security posture and compliance. |
 
 ## Architecture
 
 ```
-slack-bot-core (shared library, v0.2.0)
-├── SlackBotRunner    — Socket Mode event handler
-├── SlackBotConfig    — configuration dataclass
+bot-core (shared library, v0.3.0)
+├── BotRunner         — Socket Mode event handler
+├── BotConfig         — configuration dataclass
 ├── ChannelScanner    — thread history for BotBot reviews
 └── utils             — thread history, message formatting, status posts
 
 Each bot:
-├── Imports slack-bot-core for Slack plumbing
+├── Imports bot-core for messaging plumbing
 ├── Owns its AI client (injected via chat_fn, not in core)
 ├── Owns its business logic and tools
 └── Declares review profile in .taskr/bot.yaml
 ```
 
-Core principle: **Bots own AI policy. Core owns Slack plumbing.**
+Core principle: **Bots own AI policy. Core owns messaging plumbing.**
 
 ## Railway
 
 All bots deploy to a single Railway project: **`slack-bots`**
 
 Each bot is a service inside that project:
-- `meridian-bot` — slack-bot-meridian
-- `taskr-bot` — slack-bot-taskr
-- `sable-bot` — slack-bot-sable (if deployed)
-- `ciso-bot` — slack-bot-ciso (if deployed)
+- `meridian-bot` — meridian-bot
+- `sable-bot` — sable-bot
+- `ciso-bot` — ciso-bot (if deployed)
 
 ## Knox Secrets
 
@@ -46,7 +44,6 @@ Bot credentials live in Knox under `slack-bots/{bot-name}/`:
 
 ```
 slack-bots/meridian/bot-token    — Meridian's SLACK_BOT_TOKEN
-slack-bots/taskr/bot-token       — Taskr Bot's SLACK_BOT_TOKEN
 slack-bots/sable/bot-token       — Sable's SLACK_BOT_TOKEN
 slack-bots/ciso/bot-token        — CISO's SLACK_BOT_TOKEN
 ```
@@ -61,7 +58,7 @@ BotBot resolves these at runtime via `resolve_credential()` in `botbot/config.py
 
 ## BotBot (Quality Reviews)
 
-BotBot is **not a Slack bot** — it's a backend review engine that lives in the [taskr](https://github.com/aic-holdings/taskr) monorepo at `botbot/`.
+BotBot is **not a bot** — it's a backend review engine that lives in the [taskr](https://github.com/aic-holdings/taskr) monorepo at `botbot/`.
 
 Pipeline:
 1. Reads bot conversations via ChannelScanner (using the bot's own Slack token from Knox)
@@ -88,15 +85,15 @@ review:
 
 ## Meridian Exception
 
-**Meridian** is intentionally excluded from the SlackBotRunner pattern. It has a complex agent architecture (`src/agent/`, `src/tools/`, `src/slack/`) with tool-use loops, streaming responses, and financial data integrations that don't fit the simple `chat_fn` contract. It uses slack-bolt directly. This is a deliberate architectural decision, not technical debt.
+**Meridian** is intentionally excluded from the BotRunner pattern. It has a complex agent architecture (`src/agent/`, `src/tools/`, `src/slack/`) with tool-use loops, streaming responses, and financial data integrations that don't fit the simple `chat_fn` contract. It uses slack-bolt directly. This is a deliberate architectural decision, not technical debt.
 
 ## Adding a New Bot
 
-1. Create repo: `aic-holdings/slack-bot-{name}`
-2. Add `slack-bot-core` from pypiserver in `requirements.txt`:
+1. Create repo: `aic-holdings/{name}-bot`
+2. Add `bot-core` from pypiserver in `requirements.txt`:
    ```
    --extra-index-url https://aic-reader:<password>@pypiserver-production.up.railway.app/simple/
-   slack-bot-core==0.2.0
+   bot-core==0.3.0
    ```
    Reader credentials in Knox: `pypiserver/reader-username`, `pypiserver/reader-password`
 3. Store Slack token in Knox: `knox set slack-bots/{name}/bot-token --from-env SLACK_BOT_TOKEN`

@@ -1,8 +1,8 @@
-"""Tests for slack_bot_core.scanner"""
+"""Tests for bot_core.scanner"""
 
 from unittest.mock import MagicMock, patch
 
-from slack_bot_core.scanner import (
+from bot_core.scanner import (
     get_bot_conversations,
     get_channel_history,
     get_channels_for_bot,
@@ -12,7 +12,7 @@ from slack_bot_core.scanner import (
 class TestGetChannelHistory:
     """Tests for get_channel_history()"""
 
-    @patch("slack_bot_core.scanner.httpx.Client")
+    @patch("bot_core.scanner.httpx.Client")
     def test_successful_fetch(self, mock_client_class):
         """Successfully fetches channel history."""
         mock_client = MagicMock()
@@ -31,7 +31,7 @@ class TestGetChannelHistory:
         assert result[0]["text"] == "Hello"
         mock_client.get.assert_called_once()
 
-    @patch("slack_bot_core.scanner.httpx.Client")
+    @patch("bot_core.scanner.httpx.Client")
     def test_api_error_returns_empty(self, mock_client_class):
         """Returns empty list on Slack API error."""
         mock_client = MagicMock()
@@ -45,7 +45,7 @@ class TestGetChannelHistory:
 
         assert result == []
 
-    @patch("slack_bot_core.scanner.httpx.Client")
+    @patch("bot_core.scanner.httpx.Client")
     def test_timeout_returns_empty(self, mock_client_class):
         """Returns empty list on timeout."""
         import httpx
@@ -58,7 +58,7 @@ class TestGetChannelHistory:
 
         assert result == []
 
-    @patch("slack_bot_core.scanner.httpx.Client")
+    @patch("bot_core.scanner.httpx.Client")
     def test_pagination_two_pages(self, mock_client_class):
         """Handles cursor pagination across two pages."""
         mock_client = MagicMock()
@@ -82,7 +82,7 @@ class TestGetChannelHistory:
         assert result[1]["text"] == "Page 2"
         assert mock_client.get.call_count == 2
 
-    @patch("slack_bot_core.scanner.httpx.Client")
+    @patch("bot_core.scanner.httpx.Client")
     def test_oldest_param_passed(self, mock_client_class):
         """Passes oldest parameter to API."""
         mock_client = MagicMock()
@@ -98,7 +98,7 @@ class TestGetChannelHistory:
 class TestGetChannelsForBot:
     """Tests for get_channels_for_bot()"""
 
-    @patch("slack_bot_core.scanner.httpx.Client")
+    @patch("bot_core.scanner.httpx.Client")
     def test_returns_channels(self, mock_client_class):
         """Returns list of channel objects."""
         mock_client = MagicMock()
@@ -116,7 +116,7 @@ class TestGetChannelsForBot:
         assert len(result) == 2
         assert result[0]["id"] == "C001"
 
-    @patch("slack_bot_core.scanner.httpx.Client")
+    @patch("bot_core.scanner.httpx.Client")
     def test_api_error_returns_empty(self, mock_client_class):
         """Returns empty list on API error."""
         mock_client = MagicMock()
@@ -130,7 +130,7 @@ class TestGetChannelsForBot:
 
         assert result == []
 
-    @patch("slack_bot_core.scanner.httpx.Client")
+    @patch("bot_core.scanner.httpx.Client")
     def test_pagination(self, mock_client_class):
         """Handles cursor pagination."""
         mock_client = MagicMock()
@@ -156,8 +156,8 @@ class TestGetChannelsForBot:
 class TestGetBotConversations:
     """Tests for get_bot_conversations()"""
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_finds_bot_threads(self, mock_history, mock_thread):
         """Identifies and fetches threads where bot participated."""
         mock_history.return_value = [
@@ -176,8 +176,8 @@ class TestGetBotConversations:
         assert result[0]["channel"] == "C123"
         assert len(result[0]["messages"]) == 2
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_respects_limit(self, mock_history, mock_thread):
         """Respects the limit parameter for thread count."""
         mock_history.return_value = [
@@ -191,8 +191,8 @@ class TestGetBotConversations:
 
         assert len(result) == 2
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_deduplicates_threads(self, mock_history, mock_thread):
         """Deduplicates threads with same thread_ts."""
         mock_history.return_value = [
@@ -207,8 +207,8 @@ class TestGetBotConversations:
 
         assert len(result) == 1
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_bot_as_sender(self, mock_history, mock_thread):
         """Detects bot as direct sender by user_id."""
         mock_history.return_value = [
@@ -222,8 +222,8 @@ class TestGetBotConversations:
 
         assert len(result) == 1
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_bot_mentioned(self, mock_history, mock_thread):
         """Detects bot via @mention in message text."""
         mock_history.return_value = [
@@ -238,8 +238,8 @@ class TestGetBotConversations:
 
         assert len(result) == 1
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_permalink_format(self, mock_history, mock_thread):
         """Builds correct Slack permalink from channel and ts."""
         mock_history.return_value = [
@@ -253,8 +253,8 @@ class TestGetBotConversations:
 
         assert result[0]["permalink"] == "https://slack.com/archives/C123/p1234567890123456"
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_empty_channel(self, mock_history, mock_thread):
         """Returns empty list for channel with no bot messages."""
         mock_history.return_value = [
@@ -266,8 +266,8 @@ class TestGetBotConversations:
         assert result == []
         mock_thread.assert_not_called()
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_bot_id_detection(self, mock_history, mock_thread):
         """Detects bot messages via bot_id field."""
         mock_history.return_value = [
@@ -281,8 +281,8 @@ class TestGetBotConversations:
 
         assert len(result) == 1
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_skips_empty_threads(self, mock_history, mock_thread):
         """Skips threads where get_thread_history returns empty."""
         mock_history.return_value = [
@@ -294,8 +294,8 @@ class TestGetBotConversations:
 
         assert result == []
 
-    @patch("slack_bot_core.scanner.get_thread_history")
-    @patch("slack_bot_core.scanner.get_channel_history")
+    @patch("bot_core.scanner.get_thread_history")
+    @patch("bot_core.scanner.get_channel_history")
     def test_bot_user_id_in_result(self, mock_history, mock_thread):
         """Each conversation dict includes the bot_user_id."""
         mock_history.return_value = [

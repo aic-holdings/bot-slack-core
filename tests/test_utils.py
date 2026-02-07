@@ -1,8 +1,8 @@
-"""Tests for slack_bot_core.utils"""
+"""Tests for bot_core.utils"""
 
 from unittest.mock import MagicMock, patch
 
-from slack_bot_core.utils import (
+from bot_core.utils import (
     build_conversation_messages,
     get_thread_history,
     post_status_message,
@@ -92,7 +92,7 @@ class TestBuildConversationMessages:
 class TestGetThreadHistory:
     """Tests for get_thread_history()"""
 
-    @patch("slack_bot_core.utils.httpx.Client")
+    @patch("bot_core.utils.httpx.Client")
     def test_successful_fetch(self, mock_client_class):
         """Successfully fetches thread history."""
         mock_client = MagicMock()
@@ -111,7 +111,7 @@ class TestGetThreadHistory:
         assert result[0]["text"] == "Hello"
         mock_client.get.assert_called_once()
 
-    @patch("slack_bot_core.utils.httpx.Client")
+    @patch("bot_core.utils.httpx.Client")
     def test_api_error(self, mock_client_class):
         """Returns empty list on Slack API error."""
         mock_client = MagicMock()
@@ -125,7 +125,7 @@ class TestGetThreadHistory:
 
         assert result == []
 
-    @patch("slack_bot_core.utils.httpx.Client")
+    @patch("bot_core.utils.httpx.Client")
     def test_timeout(self, mock_client_class):
         """Returns empty list on timeout."""
         import httpx
@@ -138,7 +138,7 @@ class TestGetThreadHistory:
 
         assert result == []
 
-    @patch("slack_bot_core.utils.httpx.Client")
+    @patch("bot_core.utils.httpx.Client")
     def test_custom_limit(self, mock_client_class):
         """Passes custom limit to API."""
         mock_client = MagicMock()
@@ -154,7 +154,7 @@ class TestGetThreadHistory:
 class TestPostStatusMessage:
     """Tests for post_status_message()"""
 
-    @patch("slack_bot_core.utils.httpx.Client")
+    @patch("bot_core.utils.httpx.Client")
     def test_successful_post(self, mock_client_class):
         """Successfully posts status message."""
         mock_client = MagicMock()
@@ -166,7 +166,7 @@ class TestPostStatusMessage:
         assert result is True
         mock_client.post.assert_called_once()
 
-    @patch("slack_bot_core.utils.httpx.Client")
+    @patch("bot_core.utils.httpx.Client")
     def test_api_error(self, mock_client_class):
         """Returns False on Slack API error."""
         mock_client = MagicMock()
@@ -180,7 +180,7 @@ class TestPostStatusMessage:
 
         assert result is False
 
-    @patch("slack_bot_core.utils.httpx.Client")
+    @patch("bot_core.utils.httpx.Client")
     def test_network_error(self, mock_client_class):
         """Returns False on network error."""
         mock_client = MagicMock()

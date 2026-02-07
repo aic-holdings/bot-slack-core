@@ -1,12 +1,12 @@
-# slack-bot-core
+# bot-core
 
-Shared Slack bot utilities with dependency-injected AI for AIC Holdings bots.
+Bot infrastructure with dependency-injected AI for AIC Holdings bots.
 
 ## Philosophy
 
-**Bots own AI policy. Core owns Slack plumbing.**
+**Bots own AI policy. Core owns messaging plumbing.**
 
-- `slack-bot-core` handles: thread history, message formatting, status posting, shutdown, retries
+- `bot-core` handles: thread history, message formatting, status posting, shutdown, retries
 - Your bot handles: AI client setup, system prompt, business logic
 - AI is injected via `chat_fn`, not hidden inside core
 
@@ -15,14 +15,14 @@ Shared Slack bot utilities with dependency-injected AI for AIC Holdings bots.
 From AIC's private PyPI server:
 
 ```bash
-pip install slack-bot-core==0.2.0 \
+pip install bot-core==0.3.0 \
   --extra-index-url https://aic-reader:<password>@pypiserver-production.up.railway.app/simple/
 ```
 
 Or in `requirements.txt`:
 ```
 --extra-index-url https://aic-reader:<password>@pypiserver-production.up.railway.app/simple/
-slack-bot-core==0.2.0
+bot-core==0.3.0
 ```
 
 Reader credentials in Knox: `pypiserver/reader-username`, `pypiserver/reader-password`
@@ -31,14 +31,14 @@ Reader credentials in Knox: `pypiserver/reader-username`, `pypiserver/reader-pas
 
 ```python
 import os
-from slack_bot_core import SlackBotRunner, SlackBotConfig
+from bot_core import BotRunner, BotConfig
 from artemis_client import ArtemisClient  # Your AI client
 
 # Create your AI client (you own this)
 artemis = ArtemisClient(os.environ["ARTEMIS_API_KEY"])
 
 # Configure your bot
-config = SlackBotConfig(
+config = BotConfig(
     bot_name="My Bot",
     version="1.0.0",
     system_prompt="You are a helpful assistant...",
@@ -46,7 +46,7 @@ config = SlackBotConfig(
 )
 
 # Create runner with injected chat function
-runner = SlackBotRunner(
+runner = BotRunner(
     chat_fn=artemis.chat,
     config=config,
 )
@@ -64,11 +64,11 @@ runner.start()
 
 ## API Reference
 
-### SlackBotConfig
+### BotConfig
 
 ```python
 @dataclass
-class SlackBotConfig:
+class BotConfig:
     bot_name: str                    # Display name for diagnostics
     version: str                     # Version string
     system_prompt: str               # AI system prompt
@@ -77,14 +77,14 @@ class SlackBotConfig:
                                      # Default: ["status", "info", "diag", ...]
 ```
 
-### SlackBotRunner
+### BotRunner
 
 ```python
-class SlackBotRunner:
+class BotRunner:
     def __init__(
         self,
         chat_fn: Callable[[List[Dict], Optional[str]], str],
-        config: SlackBotConfig,
+        config: BotConfig,
         slack_bot_token: Optional[str] = None,  # Override env var
         slack_app_token: Optional[str] = None,  # Override env var
     ):
@@ -110,7 +110,7 @@ def chat_fn(
 For advanced use cases, utilities are exposed directly:
 
 ```python
-from slack_bot_core import (
+from bot_core import (
     get_thread_history,         # Fetch Slack thread messages
     build_conversation_messages, # Convert to LLM format
     post_status_message,        # Post to a channel
@@ -142,10 +142,10 @@ Handles rate limits and pagination for thread history.
 
 ### Custom Diagnostic Info
 
-Override `_get_diagnostic_info` or extend `SlackBotConfig`:
+Override `_get_diagnostic_info` or extend `BotConfig`:
 
 ```python
-config = SlackBotConfig(
+config = BotConfig(
     bot_name="My Bot",
     version="1.0.0",
     system_prompt="...",
@@ -171,7 +171,7 @@ For complex bots, use utilities directly instead of the runner:
 
 ```python
 from slack_bolt import App
-from slack_bot_core import get_thread_history, build_conversation_messages
+from bot_core import get_thread_history, build_conversation_messages
 
 app = App(token=SLACK_BOT_TOKEN)
 
@@ -183,26 +183,13 @@ def handle(event, say):
     say(response)
 ```
 
-## Testing
-
-```bash
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
-
-# Run with coverage
-pytest --cov=slack_bot_core --cov-report=html
-```
-
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                      Your Bot                           │
 │  ┌─────────────────┐  ┌─────────────────────────────┐  │
-│  │ ArtemisClient   │  │ SlackBotConfig              │  │
+│  │ ArtemisClient   │  │ BotConfig                   │  │
 │  │ (you own this)  │  │ - bot_name, version         │  │
 │  │                 │  │ - system_prompt             │  │
 │  │ .chat(msgs, p)  │  │ - status_channel            │  │
@@ -212,16 +199,16 @@ pytest --cov=slack_bot_core --cov-report=html
 │           └──────────┬──────────────┘                   │
 │                      ▼                                  │
 │           ┌──────────────────────┐                      │
-│           │   SlackBotRunner     │                      │
-│           │   (from core)        │                      │
+│           │   BotRunner          │                      │
+│           │   (from bot-core)    │                      │
 │           └──────────────────────┘                      │
 └─────────────────────────────────────────────────────────┘
                        │
                        ▼
 ┌─────────────────────────────────────────────────────────┐
-│                  slack-bot-core                         │
+│                    bot-core                              │
 │  ┌──────────────────────────────────────────────────┐  │
-│  │ SlackBotRunner                                    │  │
+│  │ BotRunner                                        │  │
 │  │ - Event handling (mentions, DMs)                  │  │
 │  │ - Thread history fetching                         │  │
 │  │ - Idempotency / dedupe                           │  │
@@ -246,7 +233,20 @@ We use semantic versioning:
 
 **Always pin versions in production:**
 ```
-slack-bot-core==0.2.0
+bot-core==0.3.0
+```
+
+## Testing
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=bot_core --cov-report=html
 ```
 
 ## Contributing
