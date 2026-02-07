@@ -86,13 +86,19 @@ review:
     - status messages
 ```
 
+## Meridian Exception
+
+**Meridian** is intentionally excluded from the SlackBotRunner pattern. It has a complex agent architecture (`src/agent/`, `src/tools/`, `src/slack/`) with tool-use loops, streaming responses, and financial data integrations that don't fit the simple `chat_fn` contract. It uses slack-bolt directly. This is a deliberate architectural decision, not technical debt.
+
 ## Adding a New Bot
 
 1. Create repo: `aic-holdings/slack-bot-{name}`
-2. Add `slack-bot-core` as dependency:
+2. Add `slack-bot-core` from pypiserver in `requirements.txt`:
    ```
-   slack-bot-core @ git+https://github.com/aic-holdings/slack-bot-core.git@v0.2.0
+   --extra-index-url https://aic-reader:<password>@pypiserver-production.up.railway.app/simple/
+   slack-bot-core==0.2.0
    ```
+   Reader credentials in Knox: `pypiserver/reader-username`, `pypiserver/reader-password`
 3. Store Slack token in Knox: `knox set slack-bots/{name}/bot-token --from-env SLACK_BOT_TOKEN`
 4. Add as service in Railway `slack-bots` project
 5. Add `.taskr/bot.yaml` with identity + review config

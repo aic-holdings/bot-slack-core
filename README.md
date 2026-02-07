@@ -12,14 +12,20 @@ Shared Slack bot utilities with dependency-injected AI for AIC Holdings bots.
 
 ## Installation
 
+From AIC's private PyPI server:
+
 ```bash
-pip install git+https://github.com/aic-holdings/slack-bot-core.git
+pip install slack-bot-core==0.2.0 \
+  --extra-index-url https://aic-reader:<password>@pypiserver-production.up.railway.app/simple/
 ```
 
-Or with a specific version:
-```bash
-pip install git+https://github.com/aic-holdings/slack-bot-core.git@v0.1.0
+Or in `requirements.txt`:
 ```
+--extra-index-url https://aic-reader:<password>@pypiserver-production.up.railway.app/simple/
+slack-bot-core==0.2.0
+```
+
+Reader credentials in Knox: `pypiserver/reader-username`, `pypiserver/reader-password`
 
 ## Quick Start
 
@@ -240,7 +246,7 @@ We use semantic versioning:
 
 **Always pin versions in production:**
 ```
-slack-bot-core==0.1.0
+slack-bot-core==0.2.0
 ```
 
 ## Contributing
