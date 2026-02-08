@@ -1,27 +1,29 @@
 constraints:
-  - Never break the chat_fn contract (messages, system_prompt) -> str
-  - Never add hard AI dependencies — AI is injected, not owned by core
-  - Backward-compatible changes only — all bots depend on this library
+  - AI (OpenRouter) is built into bot-core — bots do NOT implement their own AI clients
+  - Slack is an adapter, not a hard dependency — human interface is swappable
+  - Legacy chat_fn still supported for migration — do not remove until all bots migrated
   - Semantic versioning strictly enforced (breaking changes = major bump)
   - Test all changes — this is shared infrastructure
 
 boundaries:
   in_scope:
-    - Event handling and plumbing (Slack adapter)
+    - AI client (OpenRouter with tool-use, token logging, per-bot attribution)
+    - Bot runner (message processing, diagnostics, tool-use loop)
+    - Adapters (SlackAdapter, future adapters)
     - Thread history and conversation building
     - Status/diagnostic messages
     - Graceful shutdown
     - Bot runner configuration
     - Shared patterns and conventions (docs/)
   out_of_scope:
-    - AI client implementations
     - Business logic for specific bots
     - Database operations
     - Bot-specific commands
+    - Tool definitions (bots define their own tools)
 
 approvals:
   required_for:
     - Breaking API changes (major version bump)
     - New dependencies in pyproject.toml
-    - Changes to the chat_fn contract
+    - Changes to the adapter interface
   approvers: [dshanklin]
