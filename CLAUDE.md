@@ -35,5 +35,21 @@ config = BotConfig(
 BotRunner(config=config).start()
 ```
 
+## Headless Testing
+
+BotRunner accepts any adapter. Pass a no-op adapter to test without Slack:
+
+```python
+class HeadlessAdapter:
+    def start(self, runner): pass
+
+runner = BotRunner(config=config, adapter=HeadlessAdapter())
+response = runner.handle_message("search for tasks about MCP", [
+    {"role": "user", "content": "search for tasks about MCP"}
+])
+```
+
+This calls the real AI + real tools — the only thing missing is Slack. Use this for stress tests, regression tests, and token measurement. Pull env vars from Railway (`railway variables` or Railway MCP `list-variables`) since secrets live there, not in local .env files.
+
 ## Consumers
 All AIC bots depend on this: wrike-bot, meridian-bot, sable-bot, ciso-bot.
