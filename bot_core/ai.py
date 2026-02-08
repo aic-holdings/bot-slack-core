@@ -98,11 +98,13 @@ class OpenRouterClient:
             for tool_call in tool_calls:
                 fn = tool_call["function"]
                 name = fn["name"]
-                args = (
-                    json.loads(fn["arguments"])
-                    if isinstance(fn["arguments"], str)
-                    else fn["arguments"]
-                )
+                raw_args = fn.get("arguments", "")
+                if not raw_args:
+                    args = {}
+                elif isinstance(raw_args, str):
+                    args = json.loads(raw_args)
+                else:
+                    args = raw_args
 
                 logger.info(f"Tool call [{iteration + 1}]: {name}({args})")
 

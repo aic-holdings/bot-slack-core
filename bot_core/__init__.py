@@ -35,4 +35,4 @@ __all__ = [
     "get_channels_for_bot",
     "get_bot_conversations",
 ]
-__version__ = "0.4.0"
+__version__ = "0.4.1"
