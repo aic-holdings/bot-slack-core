@@ -36,14 +36,21 @@ class SlackAdapter:
 
         self.runner = None
 
-    def start(self, runner):
-        """Start Slack Socket Mode, routing messages to runner."""
+    def start(self, runner, register_signals=True):
+        """Start Slack Socket Mode, routing messages to runner.
+
+        Args:
+            runner: BotRunner instance to route messages to.
+            register_signals: Register SIGTERM/SIGINT handlers. Set False when
+                running in a non-main thread (e.g., bot-farm).
+        """
         self.runner = runner
         self.app = App(token=self.bot_token)
         self._register_handlers()
 
-        signal.signal(signal.SIGTERM, self._shutdown_handler)
-        signal.signal(signal.SIGINT, self._shutdown_handler)
+        if register_signals:
+            signal.signal(signal.SIGTERM, self._shutdown_handler)
+            signal.signal(signal.SIGINT, self._shutdown_handler)
 
         self._post_status(
             f":white_check_mark: {runner.config.bot_name} v{runner.config.version} is online!"

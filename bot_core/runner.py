@@ -148,8 +148,12 @@ class BotRunner:
 :house: *Platform:* Railway
 """
 
-    def start(self):
-        """Start the bot via its adapter."""
+    def start(self, **adapter_kwargs):
+        """Start the bot via its adapter.
+
+        Args:
+            **adapter_kwargs: Passed to adapter.start() (e.g., register_signals=False).
+        """
         self._start_time = time.time()
         logger.info(f"Starting {self.config.bot_name} v{self.config.version}...")
-        self.adapter.start(self)
+        self.adapter.start(self, **adapter_kwargs)
