@@ -10,6 +10,7 @@ import os
 import re
 import signal
 import sys
+import time
 from typing import Optional
 
 from slack_bolt import App
@@ -75,6 +76,7 @@ class SlackAdapter:
         user_message = event.get("text", "")
         channel = event.get("channel")
         thread_ts = event.get("thread_ts") or event.get("ts")
+        user_id = event.get("user")
 
         user_message = re.sub(r"<@[A-Z0-9]+>", "", user_message).strip()
 
@@ -85,6 +87,19 @@ class SlackAdapter:
             )
             return
 
+        log_context = {
+            "trace_id": thread_ts or event.get("ts"),
+            "user_id": user_id,
+            "session_id": thread_ts,
+            "context": {
+                "channel": channel,
+                "thread_ts": thread_ts,
+                "event_type": "app_mention",
+            },
+        }
+
+        logger.info(f"User message: {user_message}", extra=log_context)
+
         try:
             # Build conversation from thread history
             messages = [{"role": "user", "content": user_message}]
@@ -93,11 +108,18 @@ class SlackAdapter:
                 if thread_messages:
                     messages = build_conversation_messages(thread_messages)
 
-            response = self.runner.handle_message(user_message, messages)
+            start = time.time()
+            response = self.runner.handle_message(user_message, messages, log_context=log_context)
+            duration_ms = round((time.time() - start) * 1000)
+
+            logger.info(
+                f"Bot response ({duration_ms}ms): {response[:200]}",
+                extra={**log_context, "duration_ms": duration_ms},
+            )
             say(response, thread_ts=thread_ts)
 
         except Exception as e:
-            logger.error(f"Error processing mention: {e}", exc_info=True)
+            logger.error(f"Error processing mention: {e}", exc_info=True, extra=log_context)
             say(f"Sorry, I encountered an error: {e}", thread_ts=thread_ts)
 
     def _handle_dm(self, event, say):
@@ -108,13 +130,35 @@ class SlackAdapter:
             return
 
         user_message = event.get("text", "")
+        channel = event.get("channel")
+        user_id = event.get("user")
+        ts = event.get("ts")
+
+        log_context = {
+            "trace_id": ts,
+            "user_id": user_id,
+            "session_id": ts,
+            "context": {
+                "channel": channel,
+                "event_type": "dm",
+            },
+        }
+
+        logger.info(f"User message (DM): {user_message}", extra=log_context)
 
         try:
             messages = [{"role": "user", "content": user_message}]
-            response = self.runner.handle_message(user_message, messages)
+            start = time.time()
+            response = self.runner.handle_message(user_message, messages, log_context=log_context)
+            duration_ms = round((time.time() - start) * 1000)
+
+            logger.info(
+                f"Bot response ({duration_ms}ms): {response[:200]}",
+                extra={**log_context, "duration_ms": duration_ms},
+            )
             say(response)
         except Exception as e:
-            logger.error(f"Error processing DM: {e}")
+            logger.error(f"Error processing DM: {e}", extra=log_context)
             say(f"Sorry, I encountered an error: {e}")
 
     def _post_status(self, message: str):

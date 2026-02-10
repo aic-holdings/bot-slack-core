@@ -238,9 +238,10 @@ class TestBotRunnerBuiltInAI:
         result = runner.handle_message("Use the tool", messages)
 
         assert result == "Tool result"
-        runner.ai.chat_with_tools.assert_called_once_with(
-            messages=messages,
-            system_prompt="You are a test bot.",
-            tools=tools,
-            tool_executor=executor,
-        )
+        call_kwargs = runner.ai.chat_with_tools.call_args.kwargs
+        assert call_kwargs["messages"] == messages
+        assert call_kwargs["system_prompt"] == "You are a test bot."
+        assert call_kwargs["tools"] == tools
+        assert call_kwargs["tool_executor"] is executor
+        assert "log_context" in call_kwargs
+        assert call_kwargs["log_context"]["context"]["bot_name"] == "Test Bot"

@@ -101,19 +101,31 @@ class BotRunner:
 
             self.adapter = SlackAdapter()
 
-    def handle_message(self, user_text: str, messages: List[Dict]) -> str:
+    def handle_message(
+        self, user_text: str, messages: List[Dict], log_context: Optional[Dict] = None
+    ) -> str:
         """
         Process a message. Called by the adapter.
 
         Args:
             user_text: Raw user text (for diagnostic command detection)
             messages: Conversation as LLM messages [{"role": ..., "content": ...}]
+            log_context: Structured logging context (trace_id, user_id, etc.)
 
         Returns:
             Response string
         """
         if user_text.lower() in self.config.diagnostic_commands:
             return self._get_diagnostic_info()
+
+        # Merge bot identity into log context
+        ctx = dict(log_context or {})
+        existing_context = ctx.get("context", {})
+        ctx["context"] = {
+            **(existing_context if isinstance(existing_context, dict) else {}),
+            "bot_name": self.config.bot_name,
+            "bot_version": self.config.version,
+        }
 
         if self.chat_fn:
             return self.chat_fn(messages, self.config.system_prompt)
@@ -124,6 +136,7 @@ class BotRunner:
                 system_prompt=self.config.system_prompt,
                 tools=self.config.tools,
                 tool_executor=self.config.tool_executor,
+                log_context=ctx,
             )
 
         # Simple chat (no tools)
@@ -131,7 +144,7 @@ class BotRunner:
         if self.config.system_prompt:
             conversation.append({"role": "system", "content": self.config.system_prompt})
         conversation.extend(messages)
-        response = self.ai.chat(conversation)
+        response = self.ai.chat(conversation, log_context=ctx)
         return response.get("content", "I wasn't able to generate a response.")
 
     def _get_diagnostic_info(self) -> str:

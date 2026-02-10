@@ -9,6 +9,7 @@ Handles:
 
 import json
 import logging
+import time
 from typing import Any, Callable, Dict, List, Optional
 
 import httpx
@@ -28,7 +29,12 @@ class OpenRouterClient:
         self.model = model
         self.client = httpx.Client(timeout=60.0)
 
-    def chat(self, messages: List[Dict], tools: Optional[List[Dict]] = None) -> Dict:
+    def chat(
+        self,
+        messages: List[Dict],
+        tools: Optional[List[Dict]] = None,
+        log_context: Optional[Dict] = None,
+    ) -> Dict:
         """Single chat completion. Returns the message dict from the response."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -41,6 +47,7 @@ class OpenRouterClient:
         if tools:
             payload["tools"] = tools
 
+        start = time.time()
         response = self.client.post(
             f"{OPENROUTER_BASE_URL}/chat/completions",
             headers=headers,
@@ -48,13 +55,22 @@ class OpenRouterClient:
         )
         response.raise_for_status()
         result = response.json()
+        duration_ms = round((time.time() - start) * 1000)
 
         usage = result.get("usage", {})
-        if usage:
-            prompt = usage.get("prompt_tokens", 0)
-            completion = usage.get("completion_tokens", 0)
-            total = usage.get("total_tokens", 0)
-            logger.info(f"[{self.bot_name}] tokens: {prompt}p + {completion}c = {total}t")
+        prompt_tokens = usage.get("prompt_tokens", 0)
+        completion_tokens = usage.get("completion_tokens", 0)
+
+        logger.info(
+            f"[{self.bot_name}] LLM call: {prompt_tokens}p + {completion_tokens}c",
+            extra={
+                "model": self.model,
+                "tokens_in": prompt_tokens,
+                "tokens_out": completion_tokens,
+                "duration_ms": duration_ms,
+                **(log_context or {}),
+            },
+        )
 
         return result["choices"][0]["message"]
 
@@ -65,6 +81,7 @@ class OpenRouterClient:
         tools: List[Dict],
         tool_executor: Callable[[str, Dict], Any],
         max_iterations: int = 5,
+        log_context: Optional[Dict] = None,
     ) -> str:
         """
         Full tool-use loop. Returns final text response.
@@ -75,6 +92,7 @@ class OpenRouterClient:
             tools: OpenRouter tool definitions
             tool_executor: Function (tool_name, tool_args) -> result
             max_iterations: Max tool-use rounds
+            log_context: Structured logging context (trace_id, user_id, etc.)
         """
         conversation: List[Dict] = []
         if system_prompt:
@@ -83,9 +101,9 @@ class OpenRouterClient:
 
         for iteration in range(max_iterations):
             try:
-                response = self.chat(conversation, tools=tools)
+                response = self.chat(conversation, tools=tools, log_context=log_context)
             except Exception as e:
-                logger.error(f"OpenRouter API error: {e}")
+                logger.error(f"OpenRouter API error: {e}", extra=log_context or {})
                 return f"Error communicating with AI: {e}"
 
             tool_calls = response.get("tool_calls")
@@ -106,13 +124,31 @@ class OpenRouterClient:
                 else:
                     args = raw_args
 
-                logger.info(f"Tool call [{iteration + 1}]: {name}({args})")
+                logger.info(f"Tool call [{iteration + 1}]: {name}", extra={
+                    "context": {"tool_name": name, "tool_args": args, "iteration": iteration + 1},
+                    **(log_context or {}),
+                })
 
+                tool_start = time.time()
                 try:
                     result = tool_executor(name, args)
                 except Exception as e:
-                    logger.error(f"Tool execution error in {name}: {e}")
+                    logger.error(f"Tool execution error in {name}: {e}", extra={
+                        "context": {"tool_name": name, "error": str(e)},
+                        **(log_context or {}),
+                    })
                     result = {"error": f"Failed to execute {name}: {e}"}
+                tool_duration_ms = round((time.time() - tool_start) * 1000)
+
+                logger.info(f"Tool result [{iteration + 1}]: {name}", extra={
+                    "duration_ms": tool_duration_ms,
+                    "context": {
+                        "tool_name": name,
+                        "tool_result": str(result)[:1000],
+                        "success": not isinstance(result, dict) or "error" not in result,
+                    },
+                    **(log_context or {}),
+                })
 
                 conversation.append({
                     "role": "tool",

@@ -114,9 +114,12 @@ class TestSlackAdapterDM:
 
         adapter._handle_dm(event, mock_say)
 
-        mock_runner.handle_message.assert_called_once_with(
-            "hello", [{"role": "user", "content": "hello"}]
-        )
+        mock_runner.handle_message.assert_called_once()
+        call_args = mock_runner.handle_message.call_args
+        assert call_args[0][0] == "hello"
+        assert call_args[0][1] == [{"role": "user", "content": "hello"}]
+        assert "log_context" in call_args.kwargs
+        assert call_args.kwargs["log_context"]["context"]["event_type"] == "dm"
         mock_say.assert_called_once_with("DM response")
 
     def test_handle_dm_ignores_non_im(self):

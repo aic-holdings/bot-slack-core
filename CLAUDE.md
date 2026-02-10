@@ -79,5 +79,71 @@ Assertion types: `tool_called`, `tool_not_called`, `response_contains`, `respons
 
 Token capture is non-invasive — attaches a logging handler during eval to parse ai.py's log output. No changes to ai.py needed.
 
+## BotBot Quality Review
+
+BotBot reviews real Slack conversations to find bugs and quality issues. It uses `bot_core/scanner.py` to pull conversations, then sends them to a second-opinion AI (GPT-4o via OpenRouter) for analysis.
+
+### How It Works
+
+```
+review-bot                     improve-bot
+─────────────────              ─────────────────
+scan conversations       →     read BotBot findings
+analyze with GPT-4o      →     add golden test cases
+record devlog findings   →     run baseline evals
+triage by severity       →     make one change
+                               re-run evals
+                               ship if improved
+```
+
+### Running a Review
+
+```bash
+cd /path/to/taskr
+WRIKE_BOT_SLACK_BOT_TOKEN=xoxb-... OPENROUTER_API_KEY=sk-or-... \
+  python -m botbot.run_review wrike-bot
+```
+
+- `--since-last-run` — only review new conversations since last BotBot run
+- `--max-threads 5` — limit number of threads to review
+- `--channel C0ADN7SHY1L` — override channel to scan
+
+### Channel Discovery (no channels:read needed)
+
+Bots don't need `channels:read` scope. Each bot's config in `taskr/botbot/config.py` lists known channel IDs in `scan_channels`. BotBot uses the bot's own token with `channels:history` to pull messages.
+
+### Scanner API (bot_core/scanner.py)
+
+```python
+from bot_core.scanner import get_bot_conversations, get_channel_history
+
+# Pull all threads where a bot participated
+conversations = get_bot_conversations(
+    slack_token="xoxb-...",
+    channel="C0ADN7SHY1L",
+    bot_user_id="U0ADSPBMVEY",
+    oldest="1770552700.0",  # Unix timestamp — only messages after this
+    limit=50,
+)
+
+# Each conversation: {channel, thread_ts, permalink, messages, bot_user_id}
+```
+
+### Findings → Fixes Workflow
+
+1. BotBot records findings as taskr devlogs (tagged `botbot`, `severity-{level}`)
+2. Each finding has a devlog ID
+3. Pass the devlog ID to `improve-bot` skillflow as the `finding` input
+4. `improve-bot` adds golden test cases, runs evals, makes one change, verifies
+
+### Bot Configs
+
+| Bot | Channel | Config function |
+|-----|---------|----------------|
+| wrike-bot | C0ADN7SHY1L (private) | `get_wrike_bot_config()` |
+| meridian | auto-discover | `get_meridian_config()` |
+
+To add a new bot: add a `get_{name}_config()` function in `taskr/botbot/config.py` with the bot's Slack user ID, token env var, known channels, and review focus areas.
+
 ## Consumers
 All AIC bots depend on this: wrike-bot, meridian-bot, sable-bot, ciso-bot.
